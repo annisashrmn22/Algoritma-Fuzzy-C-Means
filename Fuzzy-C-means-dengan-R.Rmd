@@ -1,14 +1,15 @@
 ---
-title: Algoritma Fuzzy C-Means dengan R
+title: "ALGORITMA FUZZY C-MEANS DENGAN R"
+author: "Annisa Suherman-Institut Teknologi Statistika dan Bisnis Muhammadiyah Semarang"
 date: "`r Sys.Date()`"
-author: Annisa Suherman-Institut Teknologi Statistika dan Bisnis Muhammadiyah
-output:
-  rmdformats::readthedown:
-    self_contained: true
-    thumbnails: true
-    lightbox: true
-    gallery: false
-    highlight: tango
+output: 
+  html_document:
+    theme: flatly
+    higlight: zenburn
+    toc: true
+    toc_float:
+      collapsed: true
+    df_print: paged
 bibliography: references.bib
 ---
 
@@ -28,6 +29,8 @@ Clustering merupakan salah satu metode machine learning dan termasuk dalam unsup
 # Algoritma Fuzzy C-Means
 Fuzzy C-Means (FCM) adalah Teknik clustering yang digunakan untuk pengelompokan data yang tidak hanya memiliki nilai yang sama didalam suatu cluster, tetapi juga kelompok nilai-nilai yang memiliki dua atau lebih kelompok menurut level keanggotaannya.
 
+FCM termasuk kedalam soft clustering karena penentuan keanggotaannya berdasarkan derajat keanggotaan.
+
 
 # Tahapan Algoritma Fuzzy C-Means
 1. Input data
@@ -37,7 +40,7 @@ b)Bobot pangkat (w > 1 );
 c)Jumlah maksimal Iterasi;
 d)Ambang batas perubahan nilai fungsi objektif (Error terkecil yang diharapkan).
 3. Inisialisasi Matriks Pseudo-Partition
-Memberikan nilai random pada matriks Fuzzy Pseudo partition dengan syarat antara u (u1) , i (u2) dan j (u3) berjumlah satu, Σuij = 1
+Memberikan nilai secara acak pada matriks Fuzzy Pseudo partition dengan syarat antara u (u1) , i (u2) dan j (u3) berjumlah satu, Σuij = 1
 
 $$
 \sum_{j=1}^k u_{i j}=1
@@ -47,8 +50,7 @@ $$
 Lakukan langkah 
 u1*(a1), u1*(a2), u1*(a3), u1*(a4)
 u2*(a1), u2*(a2), u2*(a3), u2*(a4)
-Pengulangan akan tetap berlanjut apabila :
-(1) Perubahan pada nilai fungsi objektif masih di atas nilai ambang batas yang di tentukan ; atau (2) perubahan pada nilai centroid masih di atas nilai ambang yang di tentukan ; atau (3) Iterasi maksimal belom tercapai.
+Pengulangan akan tetap berlanjut apabila : a)Perubahan pada nilai fungsi objektif masih di atas nilai ambang batas yang di tentukan ; atau b) perubahan pada nilai centroid masih di atas nilai ambang yang di tentukan ; atau c) Iterasi maksimal belom tercapai.
 
 5. Hitung nilai centroid dari setiap cluster menggunakan persamaan:
 
@@ -62,11 +64,10 @@ $$
 U_{i j}=\frac{D\left(x_i, c_j\right)^{\frac{-2}{w-1}}}{\sum_{i=1}^k D\left(x_i, c_j\right)^{\frac{-2}{w-1}}}
 $$
 
-
-
 # Eksperimen Algoritma Fuzzy C-Means
 
 ## Library
+Sebelum memasukkan data, kita perlu memanggil library terlebih dahulu dan meng install beberapa packages yang belum tersedia.
 
 ```{r}
 require(ppclust)
@@ -84,8 +85,12 @@ require(cluster)
 require(fclust)
 ```
 
+## Input Dataset
+Pertama, dan bagian terpenting adalah memanggil data. Karena data dalam format excel, maka data diekspor dalam R menggunakan fungsi read.excel(). Pada kali ini menggunakan data set anemia. Pastikan variabel datanya numerik.
 
-## Import Dataset
+Untuk variabel 1 Gender, 1 = Laki-laki, 0 = Perempuan.
+
+Untuk variabel 6 Result, 1 = Terkena anemia, 0 = Tidak terkena anemia.
 
 ```{r warning=FALSE}
 library(readxl)
@@ -94,29 +99,33 @@ anemia <- read_excel("anemia.xlsx", col_types = c("numeric",
     "numeric"))
 ```
 
+Selanjutnya menampilkan data set.
 ```{r}
 anemia
 ```
-
+Kemudian menghapus Variabel kolom pertama karena variabel gender tidak diperlukan. Dari data anemia ini kita hanya akan tampilkan n=50 dari 1421.
 ```{r}
-data(anemia)
 x=anemia[,-1]
 x[1:50,]
 ```
 
-## Data Preprocessing
+## Pra-pemrosesan Data
+Sebelum data diproses kita perlu memeriksa apakah ada nilai yang hilang dengan menggunakan fungsi colSums().
 
 ```{r}
 colSums(is.na(x))
 ```
+Dapat dilihat bahwa tidak ada nilai yang hilang. Jadi, kita tidak perlu Pra-pemrosesan lebih lanjut.
 
 ## Summary of Data
+Di sini, di bawah ini adalah ringkasan variabel dari data set anemia. Di mana, minimum, maksimum, median, dan rata-rata, kuartil 1 dan kuartil 3  dihitung untuk setiap variabel dan ditampilkan.
 
 ```{r}
 summary(x)
 ```
 
-## Correlation of the Data
+## Korelasi
+Tahap ini untuk mengetahui korelasi antar variabel.
 
 ```{r}
 cor(x)
@@ -130,19 +139,26 @@ require(psych)
 pairs.panels(x, method = "pearson")
 ```
 
-## Fuzzy C-Means
+## Fuzzy Membership Matrix
+Fuzzy C-Means (FCM) ini didasarkan pada Teori Logika Fuzzy (Lotfi Zadeh-1965)
+Keanggotaan data tidak harus bernilai 0 dan 1, tetapi dengan nilai derajat keanggotaannya berada di jangkauan  antara 0 sampai 1.
+ 
+0 = sama sekali bukan anggota;
+1 = anggota secara penuh.
 
+“Semakin tinggi nilai keanggotaan, semakin tinggi pula derajatnya”.
+
+
+### Pembagian Cluster/kelompok = 3
 ```{r}
 res.fcm <- fcm(x, centers=3)
 ```
-
-## Fuzzy Membership Matrix
-
+Menampilkan Cluster/kelompok 
 ```{r}
 as.data.frame(res.fcm$u)[1:50,]
 ```
 
-## Initial and final cluster prototypes matrices
+### Matriks prototypes cluster awal dan akhir
 
 ```{r}
 res.fcm$v0
@@ -156,7 +172,8 @@ res.fcm$v
 summary(res.fcm)
 ```
 
-## FCM with Multiple Start
+## FCM dengan Multiple Start
+Fungsi fcm dapat dimulai beberapa kali Untuk menemukan solusi optimal.
 
 ```{r}
 res.fcm <- fcm(x, centers=3, nstart=5)
@@ -177,14 +194,15 @@ summary(res.fcm)
 ```
 
 ## Visualization
+Plotcluster() dapat digunakan untuk memplot hasil pengelompokan. Ada beberapa Plot yaitu sebagai berikut:
 
-Pairwise Scatter Plots
+### Pairwise Scatter Plots
 
 ```{r}
 plotcluster(res.fcm, cp=1, trans=TRUE)
 ```
 
-Cluster Plot with fviz_cluster
+### Cluster Plot with fviz_cluster
 
 ```{r}
 res.fcm2 <- ppclust2(res.fcm, "kmeans")
@@ -194,7 +212,7 @@ fviz_cluster(res.fcm2, data = x,
   repel = TRUE)
 ```
 
-Cluster Plot with clusplot
+### Cluster Plot with clusplot
 
 ```{r}
 res.fcm3 <- ppclust2(res.fcm, "fanny")
@@ -205,6 +223,8 @@ cluster::clusplot(scale(x), res.fcm3$cluster,
 ```
 
 ## Validation of Results
+Tahap ini merupakan proses evaluasi terhadap hasil clustering.
+Disini terdapat Partition Entropy (PE), Partition Coefficient (PC) dan Modified Partition Coefficient (MPC) dan Fuzzy Silhouette Index.
 
 ```{r}
 res.fcm4 <- ppclust2(res.fcm, "fclust")
@@ -230,3 +250,5 @@ cat("Fuzzy Silhouette Index: ", idxsf)
 
 1. https://rpubs.com/rahulSaha/Fuzzy-CMeansClustering
 2. https://rpubs.com/writetosamadalvi/Fuzzy
+3. https://github.com/annisashrmn22/Algoritma-Fuzzy-C-Means
+4. https://drive.google.com/drive/folders/13VrpoyFvsWTQ_6rc5Ivy1A3xm8Y4TIP9
